@@ -1,0 +1,1 @@
+# example_wordpress_for_minikube
