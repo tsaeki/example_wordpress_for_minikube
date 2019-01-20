@@ -1,6 +1,5 @@
 # Service
 # https://kubernetes.io/docs/concepts/services-networking/service/
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,6 +9,8 @@ metadata:
 spec:
   ports:
     - port: 3306
+  # https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+  # app == wordpress && tier == mysql
   selector:
     app: wordpress
     tier: mysql
@@ -45,6 +46,8 @@ metadata:
   labels:
     app: wordpress
 spec:
+  # https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+  # app == wordpress && tier == mysqlS
   selector:
     matchLabels:
       app: wordpress
@@ -61,11 +64,12 @@ spec:
         tier: mysql
     spec:
       # mysql:5.6のimageから1つのコンテナを含んだPodを起動する
+      # https://hub.docker.com/_/mysql
       containers:
       - image: mysql:5.6
         name: mysql
         env:
-         # kubectl create secretで作成したパスワードを参照する
+        # kubectl create secretで作成したパスワードを参照する
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -74,7 +78,7 @@ spec:
         ports:
         - containerPort: 3306
           name: mysql
-          # PersistentVolumeClaimで作成したVolumeをマウントする
+        # PersistentVolumeClaimで作成したVolumeをマウントする
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
