@@ -1,3 +1,6 @@
+# Service
+# https://kubernetes.io/docs/concepts/services-networking/service/
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,8 +13,14 @@ spec:
   selector:
     app: wordpress
     tier: mysql
+  # spec.clusterIP==NoneでHeadless Serviceになる
+  # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
   clusterIP: None
 ---
+# PersistentVolumeClaim
+# https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+# PersistentVolumeのPodが作成される
+# PersistentVolumeClaimは作成されたPersistentVolumeを紐付けする
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -19,12 +28,16 @@ metadata:
   labels:
     app: wordpress
 spec:
+  # spec.accessModes==ReadWriteOnce the volume can be mounted as read-write by a single node
+  # 単一のノードから読み書きできる
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 20Gi
 ---
+# Deployment
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
@@ -36,6 +49,9 @@ spec:
     matchLabels:
       app: wordpress
       tier: mysql
+  # spec.strategy.type==Recreate
+  # All existing Pods are killed before new ones are created when .spec.strategy.type==Recreate.
+  # 新しいPodが作成されると古いPodは削除される
   strategy:
     type: Recreate
   template:
@@ -44,10 +60,12 @@ spec:
         app: wordpress
         tier: mysql
     spec:
+      # mysql:5.6のimageから1つのコンテナを含んだPodを起動する
       containers:
       - image: mysql:5.6
         name: mysql
         env:
+         # kubectl create secretで作成したパスワードを参照する
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -56,9 +74,11 @@ spec:
         ports:
         - containerPort: 3306
           name: mysql
+          # PersistentVolumeClaimで作成したVolumeをマウントする
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
+      # PersistentVolumeClaimで作成済み
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
